@@ -81,37 +81,43 @@ app.renderer.view.style.position = "absolute";
 app.renderer.view.style.display = "block";
 document.body.appendChild(app.view);
 
+var updateBounds = backgroundDrag({
+    top: 0,
+    left: 0,
+    right: app.renderer.view.width,
+    bottom: app.renderer.view.height
+}, app.stage);
+
 window.addEventListener("resize", () => {
     app.renderer.resize(window.innerWidth, window.innerHeight);
-    resizeStage();
-});
+    resizeStage(0.3);
+    centerStage();
 
-loader.onProgress.add(() => console.log("ok!"));
-loadImages(imgInit);
-loader.load(setup);
-
-function setup() {
-    resizeStage(0.2);
-
-    backgroundDrag({
+    updateBounds({
         top: 0,
         left: 0,
         right: app.renderer.view.width,
         bottom: app.renderer.view.height
-    }, app.stage);
+    });
+});
 
+loader.onProgress.add(() => console.log("img loaded"));
+loadImages(imgInit);
+loader.load(setup);
+
+function setup() {
     main()
 
-    app.stage.x = app.renderer.view.width / 2 - app.stage.width / 2
-    app.stage.y = app.renderer.view.height / 2 - app.stage.height / 2
+    centerPivot(app.stage);
+    centerStage();
+    resizeStage(0.2);
 
-    // appTL.to(0.8, app.stage, {
-    //     scale: {
-    //         x: 0.3,
-    //         y: 0.3
-    //     }
-    // })
-
+    appTL.to(0.4, app.stage, {
+        scale: {
+            x: 0.3,
+            y: 0.3
+        }
+    })
     appTicker
         .add(() => {
             appTL.play();
@@ -128,52 +134,7 @@ function setMap() {
     app.stage.addChild(map);
 }
 
-function animate(time, doing) {
-    return (then) => {
-        const milliTime = time * 60;
-        let count = 0;
-        const ticker = new Ticker();
-
-        ticker.add(() => {
-            if (count >= milliTime) {
-                ticker.stop();
-                then && then();
-            }
-            doing();
-            count += 1;
-        });
-        ticker.start();
-    };
-}
-
-function loadImages(data) {
-    data.forEach((item) => {
-        const path = item.url || "images/" + item.fileName;
-
-        loader.add(item.name, path, {
-            crossOrigin: true,
-        });
-    });
-}
-
-function createSpriteFromName(name) {
-    let sprite = new Sprite(getTexture(name));
-    sprite.name = name;
-    return sprite;
-}
-
-function getTexture(name) {
-    return loader.resources[name].texture;
-}
-
-function resizeStage(scale) {
-    app.stage.scale.x = app.stage.scale.y = scale;
-}
-
-function centerPivot(container) {
-    container.pivot.set(container.width / 2, container.height / 2);
-}
-
+// feature
 function backgroundDrag(bounds, draggable) {
     draggable.interactive = true;
 
@@ -251,4 +212,38 @@ function backgroundDrag(bounds, draggable) {
         draggable.x += movementX;
         draggable.y += movementY;
     };
+
+    return function(newBounds) {
+        bounds = newBounds
+    }
+}
+
+// utils
+function loadImages(data) {
+    data.forEach((item) => {
+        const path = item.url || "images/" + item.fileName;
+
+        loader.add(item.name, path, {
+            crossOrigin: true,
+        });
+    });
+}
+
+function createSpriteFromName(name, spriteName) {
+    let sprite = new Sprite(loader.resources[name].texture);
+    sprite.name = name || spriteName;
+    return sprite;
+}
+
+function resizeStage(scale) {
+    app.stage.scale.x = app.stage.scale.y = scale;
+}
+
+function centerStage() {
+    app.stage.x = app.renderer.view.width / 2
+    app.stage.y = app.renderer.view.height / 2
+}
+
+function centerPivot(container) {
+    container.pivot.set(container.width / 2, container.height / 2);
 }
