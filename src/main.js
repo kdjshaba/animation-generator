@@ -64,7 +64,8 @@ utils.sayHello(type);
 
 // timeLine
 var appTicker = new Ticker();
-var appTL = new TimeLine({
+var appTL = new TimeLine();
+var mainTL = new TimeLine({
     order: 'parallel'
 });
 
@@ -112,12 +113,14 @@ function setup() {
     centerStage();
     resizeStage(0.2);
 
-    appTL.to(0.4, app.stage, {
-        scale: {
-            x: 0.3,
-            y: 0.3
-        }
-    })
+    appTL
+        .to(0.4, app.stage, {
+            scale: {
+                x: 0.3,
+                y: 0.3
+            }
+        })
+        .add(mainTL)
     appTicker
         .add(() => {
             appTL.play();
@@ -127,11 +130,28 @@ function setup() {
 
 function main() {
     setMap();
+    plane();
 }
 
 function setMap() {
     var map = createSpriteFromName('map')
     app.stage.addChild(map);
+}
+
+function plane() {
+    var plane = createSpriteFromName('plane')
+
+    plane.x = imgInit[2].x + 700
+    plane.y = imgInit[2].y + 700
+    app.stage.addChild(plane);
+
+    mainTL
+        .to(1, plane, {
+            x: imgInit[2].x,
+            y: imgInit[2].y
+        }, {
+            timingFunction: 'easeInOut'
+        })
 }
 
 // feature

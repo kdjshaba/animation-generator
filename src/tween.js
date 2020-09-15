@@ -23,13 +23,13 @@ var TimeConvert = {
 var SpriteControl = {
     applyToSprite: function(sprite, change) {
         var keys = Object.keys(change);
+
         for (var i = 0; i < keys.length; i++) {
             var target = keys[i];
             var targetChange = change[target];
 
             if (target === "x" || target === "y") {
                 sprite[target] = targetChange;
-
             } else if (target === 'rotate') {
                 if (targetChange.center) {
                     sprite.pivot.set(targetChange.center.x, targetChange.center.y);
@@ -64,6 +64,15 @@ var TimingFunction = {
     linear: function(timePercentage) {
         return timePercentage;
     },
+    easeIn: function(t) {
+        return t * t;
+    },
+    easeOut: function(t) {
+        return t * (2 - t);
+    },
+    easeInOut: function(t) {
+        return t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    }
 };
 
 var PropertyCanTransform = {
@@ -81,12 +90,11 @@ var PropertyCanTransform = {
         clockwise: true || false,
         // any can be apply to subject
         center: {}
+    },
+    scale: {
+        x: 1,
+        y: 1
     }
-}
-
-// utilities
-function calcChange(start, end, percentage) {
-    return start + (end - start) * percentage;
 }
 
 // transform
@@ -140,10 +148,10 @@ var Transforms = {
             scale: {}
         };
 
-        if (typeof startX === "number") {
+        if (typeof endX === "number") {
             result.scale.x = startX + (endX - startX) * percentage
         }
-        if (typeof startY === "number") {
+        if (typeof endY === "number") {
             result.scale.y = startY + (endY - startY) * percentage
         }
 
@@ -201,6 +209,22 @@ var DurationCalculator = {
     }
 }
 
+// tween factory
+var TweenFactory = {
+    moveStright: function(duration, sprite, end, config) {
+        duration = duration * 60;
+
+        var tween = new Tween(duration, sprite, end, config);
+
+        return tween;
+    },
+    delay: function(duration) {
+        duration = duration * 60;
+
+        return new Tween(duration);
+    },
+};
+
 // tween
 function Tween(duration, subject, end, config) {
     config = config || {};
@@ -208,19 +232,13 @@ function Tween(duration, subject, end, config) {
     this.status = "pause";
     this.duration = duration || 0;
     this.subject = subject;
-    this.mode = config.mode || "once";
     this.end = end || {};
     this.start = {};
     this.timingFunction = TimingFunction[config.timingFunction] || TimingFunction.linear;
-    this.convertTime = TimeConvert[config.mode] || TimeConvert.once;
+    this.convertTime = TimeConvert.once;
     this.fromSubject = config.fromSubject || SpriteControl.fromSprite;
     this.applyToSubject = config.applyToSubject || SpriteControl.applyToSprite;
 }
-
-Tween.prototype.setMode = function(mode) {
-    this.mode = mode;
-    this.convertTime = TimeConvert[mode];
-};
 
 Tween.prototype.transform = function(start, end, percentage) {
     var transformKeys = Object.keys(Transforms);
@@ -275,22 +293,6 @@ Tween.prototype.play = function(time) {
     if (this.subject) {
         this.applyToSubject(this.subject, result);
     }
-};
-
-// tween factory
-var TweenFactory = {
-    moveStright: function(duration, sprite, end, config) {
-        duration = duration * 60;
-
-        var tween = new Tween(duration, sprite, end, config);
-
-        return tween;
-    },
-    delay: function(duration) {
-        duration = duration * 60;
-
-        return new Tween(duration);
-    },
 };
 
 // TimeLine
@@ -371,9 +373,3 @@ TimeLine.prototype.when = function(time, callback) {
 
     return this;
 };
-
-// setmode
-function setMode(mode) {
-    this.mode = mode;
-    this.convertTime = TimeConvert[mode];
-}
