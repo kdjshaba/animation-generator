@@ -34,8 +34,9 @@ var SpriteControl = {
                 if (targetChange.center) {
                     sprite.pivot.set(targetChange.center.x, targetChange.center.y);
                 }
-                sprite.angle = targetChange.angle;
-
+                if (typeof targetChange.angle === "number") {
+                    sprite.angle = targetChange.angle;
+                }
             } else if (target === 'scale') {
                 sprite.scale.x = typeof targetChange.x === "number" ? targetChange.x : sprite.scale.x
                 sprite.scale.y = typeof targetChange.y === "number" ? targetChange.y : sprite.scale.y
@@ -120,8 +121,9 @@ var Transforms = {
         var startAngle = start.rotate && start.rotate.angle;
         var endAngle = end.rotate && end.rotate.endAngle;
         var angle = end.rotate && end.rotate.angle;
-        var result = {};
-        var rotate = {};
+        var result = {
+            rotate: {}
+        };
         var diff = 0;
 
         if (!endAngle && !angle) return result;
@@ -133,9 +135,8 @@ var Transforms = {
             diff = angle * percentage;
         }
 
-        rotate.angle = startAngle + diff;
-        rotate.center = end.rotate.center;
-        result.rotate = rotate;
+        result.rotate.angle = startAngle + diff;
+        result.rotate.center = end.rotate.center;
 
         return result;
     },
