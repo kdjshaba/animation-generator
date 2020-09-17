@@ -207,30 +207,32 @@ function backgroundDrag(bounds, draggable) {
       }
     }
 
-    var isXInner =
+    var isWidthInner =
       dragBounds.right <= bounds.right && dragBounds.left >= bounds.left;
-    var oneXSideInner =
+
+    var innerLeftOrRight =
       dragBounds.right + movementX <= bounds.right ||
       dragBounds.left + movementX >= bounds.left;
 
-    var isYInner =
+    var isHeightInner =
       dragBounds.bottom <= bounds.bottom && dragBounds.top >= bounds.top;
-    var oneYSideInner =
+
+    var innerTopOrBottom =
       dragBounds.bottom + movementY <= bounds.bottom ||
       dragBounds.top + movementY >= bounds.top;
 
-    if (isXInner) {
+    if (isWidthInner) {
       movementX = 0;
-    } else if (oneXSideInner) {
+    } else if (innerLeftOrRight) {
       var rightOffset = bounds.right - dragBounds.right;
       var leftOffset = bounds.left - dragBounds.left;
       movementX =
         Math.abs(rightOffset) > Math.abs(leftOffset) ? leftOffset : rightOffset;
     }
 
-    if (isYInner) {
+    if (isHeightInner) {
       movementY = 0;
-    } else if (oneYSideInner) {
+    } else if (innerTopOrBottom) {
       var bottomOffset = bounds.bottom - dragBounds.bottom;
       var topOffset = bounds.top - dragBounds.top;
       movementY =

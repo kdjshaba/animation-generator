@@ -310,9 +310,7 @@ function TimeLine(config) {
     this.convertTime = TimeConvert[mode];
     this.runChilds = RunOrder[order];
     this.updateDuration = DurationCalculator[order];
-    this.observer = {
-        when: {},
-    };
+    this.observer = new Observer();
 }
 
 TimeLine.prototype.add = function(timeLine) {
@@ -328,10 +326,14 @@ TimeLine.prototype.play = function(time) {
 
     if (this.time === null) return;
 
-    var todo = this.observer.when[this.time];
+    this.observer.timeUp(this.time, this.duration)
 
-    todo && todo.call(this);
     this.runChilds(this.time, this.children);
+
+    if (this.time === this.duration) {
+        this.observer.timeUp('end', this.duration)
+    }
+
     this.time += 1;
 };
 
@@ -360,17 +362,28 @@ TimeLine.prototype.delay = function(duration) {
     return this;
 };
 
-// observer
 TimeLine.prototype.when = function(time, callback) {
-    if (time === "end") {
-        time = this.duration;
-    } else if (time === "start") {
+    this.observer.when(time, callback);
+
+    return this;
+};
+
+function Observer() {
+    this.when = {};
+}
+
+Observer.prototype.timeUp = function(time, duration) {
+    var key = time;
+
+    typeof this.when[key] === 'function' && this.when[key]();
+}
+
+Observer.prototype.when = function(time, callback) {
+    if (time === "start") {
         time = 0;
     } else {
         time = time * 60;
     }
 
-    this.observer.when[time] = callback;
-
-    return this;
-};
+    this.when[time] = callback;
+}
