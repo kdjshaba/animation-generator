@@ -123,6 +123,7 @@ function setup() {
       },
     })
     .add(mainTL);
+
   appTicker
     .add(() => {
       appTL.play();
@@ -271,18 +272,18 @@ function resizeStage(scale) {
 
 // utils
 function loadImages(data) {
-  data.forEach((item) => {
-    const path = item.url || "images/" + item.fileName;
+  data.forEach((img) => {
+    const path = img.url || "images/" + img.fileName;
 
-    loader.add(item.name, path, {
+    loader.add(img.name, path, {
       crossOrigin: true,
     });
   });
 }
 
-function createSpriteFromName(name, spriteName) {
-  let sprite = new Sprite(loader.resources[name].texture);
-  sprite.name = name || spriteName;
+function createSpriteFromName(sourceName, spriteName) {
+  let sprite = new Sprite(loader.resources[sourceName].texture);
+  sprite.name = sourceName || spriteName;
   return sprite;
 }
 

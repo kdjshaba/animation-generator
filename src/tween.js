@@ -25,35 +25,35 @@ var SpriteControl = {
         var keys = Object.keys(change);
 
         for (var i = 0; i < keys.length; i++) {
-            var target = keys[i];
-            var targetChange = change[target];
+            var prop = keys[i];
+            var propVal = change[prop];
 
-            if (target === "x" || target === "y") {
-                sprite[target] = targetChange;
-            } else if (target === 'rotate') {
-                if (targetChange.center) {
-                    sprite.pivot.set(targetChange.center.x, targetChange.center.y);
-                }
-                if (typeof targetChange.angle === "number") {
-                    sprite.angle = targetChange.angle;
-                }
-            } else if (target === 'scale') {
-                sprite.scale.x = typeof targetChange.x === "number" ? targetChange.x : sprite.scale.x
-                sprite.scale.y = typeof targetChange.y === "number" ? targetChange.y : sprite.scale.y
+            if (prop === "x" || prop === "y") {
+                sprite[prop] = propVal;
+            } else if (prop === "rotate") {
+                sprite.pivot.set(propVal.center.x, propVal.center.y);
+                sprite.angle = propVal.angle;
+            } else if (prop === "scale") {
+                sprite.scale.x = propVal.x;
+                sprite.scale.y = propVal.y;
             }
         }
     },
-    fromSprite: function(sprite, keys) {
+    fromSprite: function(sprite) {
         var obj = {
             x: sprite.x,
             y: sprite.y,
             rotate: {
-                angle: sprite.angle
+                angle: sprite.angle,
+                center: {
+                    x: sprite.pivot.x,
+                    y: sprite.pivot.y,
+                },
             },
             scale: {
                 x: sprite.scale.x,
                 y: sprite.scale.y,
-            }
+            },
         };
 
         return obj;
@@ -72,7 +72,7 @@ var TimingFunction = {
         return t * (2 - t);
     },
     easeInOut: function(t) {
-        return t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
     }
 };
 
@@ -90,18 +90,18 @@ var PropertyCanTransform = {
         // if endAngle not set, clockwise won't be used
         clockwise: true || false,
         // any can be apply to subject
-        center: {}
+        center: {},
     },
     scale: {
         x: 1,
-        y: 1
-    }
-}
+        y: 1,
+    },
+};
 
 // transform
 var Transforms = {
     position: function(start, end, percentage) {
-        var positionKeys = ['x', 'y']
+        var positionKeys = ["x", "y"];
         var result = {};
 
         for (var i = 0; i < positionKeys.length; i++) {
@@ -118,47 +118,48 @@ var Transforms = {
         return result;
     },
     rotate: function(start, end, percentage) {
-        var startAngle = start.rotate && start.rotate.angle;
-        var endAngle = end.rotate && end.rotate.endAngle;
-        var angle = end.rotate && end.rotate.angle;
-        var result = {
-            rotate: {}
-        };
+        var rotate = {};
+
+        if (!end.rotate) return rotate;
+
+        var startAngle = start.rotate.angle;
+        var endAngle = end.rotate.endAngle;
+        var angle = end.rotate.angle;
         var diff = 0;
 
-        if (!endAngle && !angle) return result;
-
-        if (endAngle) {
-            var rotateAngle = end.rotate.clockwise ? endAngle - startAngle : -(startAngle + 360 - endAngle);
+        if (endAngle || endAngle === 0) {
+            var rotateAngle = end.rotate.clockwise ?
+                endAngle - startAngle :
+                -(startAngle + 360 - endAngle);
             diff = rotateAngle * percentage;
-        } else {
+        } else if (angle) {
             diff = angle * percentage;
         }
 
-        result.rotate.angle = startAngle + diff;
-        result.rotate.center = end.rotate.center;
+        rotate.angle = startAngle + diff;
 
-        return result;
+        return rotate;
     },
     scale: function(start, end, percentage) {
-        var startX = start.scale && +start.scale.x;
-        var startY = start.scale && +start.scale.y;
-        var endX = end.scale && +end.scale.x;
-        var endY = end.scale && +end.scale.y;
-        var result = {
-            scale: {}
-        };
+        var scale = {};
+
+        if (!end.scale) return scale;
+
+        var startX = start.scale.x;
+        var startY = start.scale.y;
+        var endX = end.scale.x;
+        var endY = end.scale.y;
 
         if (typeof endX === "number") {
-            result.scale.x = startX + (endX - startX) * percentage
+            scale.x = startX + (endX - startX) * percentage;
         }
         if (typeof endY === "number") {
-            result.scale.y = startY + (endY - startY) * percentage
+            scale.y = startY + (endY - startY) * percentage;
         }
 
-        return result;
-    }
-}
+        return scale;
+    },
+};
 
 // timeline run order
 var RunOrder = {
@@ -181,8 +182,8 @@ var RunOrder = {
 
             animation.play(time);
         }
-    }
-}
+    },
+};
 
 // timeLine duration calculator by order
 var DurationCalculator = {
@@ -207,8 +208,8 @@ var DurationCalculator = {
         }
 
         this.duration = max;
-    }
-}
+    },
+};
 
 // tween factory
 var TweenFactory = {
@@ -235,43 +236,59 @@ function Tween(duration, subject, end, config) {
     this.subject = subject;
     this.end = end || {};
     this.start = {};
-    this.timingFunction = TimingFunction[config.timingFunction] || TimingFunction.linear;
+    this.timingFunction =
+        TimingFunction[config.timingFunction] || TimingFunction.linear;
     this.convertTime = TimeConvert.once;
     this.fromSubject = config.fromSubject || SpriteControl.fromSprite;
     this.applyToSubject = config.applyToSubject || SpriteControl.applyToSprite;
 }
 
+Tween.prototype.transformFunc = Transforms;
+
 Tween.prototype.transform = function(start, end, percentage) {
-    var transformKeys = Object.keys(Transforms);
-    var result = {};
+    var transformKeys = Object.keys(this.transformFunc);
+    var result = objectAssign({}, start);
 
     for (let i = 0; i < transformKeys.length; i++) {
         var key = transformKeys[i];
-        var transform = Transforms[key];
+        var transform = this.transformFunc[key];
         var partialResult = transform(start, end, percentage);
-        var partialKeys = Object.keys(partialResult);
 
-        for (let j = 0; j < partialKeys.length; j++) {
-            var key = partialKeys[j];
+        switch (key) {
+            case "rotate":
+                result.rotate = objectAssign(
+                    objectAssign({}, start.rotate),
+                    partialResult
+                );
+                break;
 
-            result[key] = partialResult[key];
+            case "scale":
+                result.scale = objectAssign(
+                    objectAssign({}, start.scale),
+                    partialResult
+                );
+                break;
+
+            default:
+                objectAssign(result, partialResult);
+                break;
         }
     }
 
     return result;
-}
+};
 
 Tween.prototype.updateStart = function(start) {
-    this.start = start || this.fromSubject(this.subject, Object.keys(this.end));
+    this.start = start || this.fromSubject(this.subject);
 
     return this;
 };
 
-Tween.prototype.timeCgange = function(time) {
+Tween.prototype.getTimePercentage = function(time) {
     return time / this.duration;
 };
 
-Tween.prototype.valueChange = function(timePercentage) {
+Tween.prototype.getTransformPercentage = function(timePercentage) {
     var valuePercentage = this.timingFunction(timePercentage);
 
     return valuePercentage;
@@ -280,27 +297,25 @@ Tween.prototype.valueChange = function(timePercentage) {
 Tween.prototype.play = function(time) {
     time = this.convertTime(time, this.duration);
 
-    if (time === null) return;
+    if (time === null || !this.subject) return;
 
     if (this.status === "pause") {
         this.updateStart();
         this.status = "running";
     }
 
-    var timePercentage = this.timeCgange(time);
-    var valuePercentage = this.valueChange(timePercentage);
-    var result = this.transform(this.start, this.end, valuePercentage);
+    var timePercentage = this.getTimePercentage(time);
+    var transformPercentage = this.getTransformPercentage(timePercentage);
+    var result = this.transform(this.start, this.end, transformPercentage);
 
-    if (this.subject) {
-        this.applyToSubject(this.subject, result);
-    }
+    this.applyToSubject(this.subject, result);
 };
 
 // TimeLine
 function TimeLine(config) {
-    config = config || {}
-    order = config.order || "sequence"
-    mode = config.mode || "infinite"
+    config = config || {};
+    order = config.order || "sequence";
+    mode = config.mode || "infinite";
 
     this.mode = mode;
     this.order = order;
@@ -322,34 +337,23 @@ TimeLine.prototype.add = function(timeLine) {
 
 TimeLine.prototype.play = function(time) {
     time = time || this.time;
+    time += 1;
     this.time = this.convertTime(time, this.duration);
 
     if (this.time === null) return;
 
-    this.observer.timeUp(this.time, this.duration)
+    this.observer.timeUp(this.time, this.duration);
 
     this.runChilds(this.time, this.children);
 
     if (this.time === this.duration) {
-        this.observer.timeUp('end', this.duration)
+        this.observer.timeUp("end", this.duration);
     }
-
-    this.time += 1;
 };
 
 // create tween on timeline
-TimeLine.prototype.to = function(
-    duration,
-    sprite,
-    end,
-    config
-) {
-    var newTween = TweenFactory.moveStright(
-        duration,
-        sprite,
-        end,
-        config
-    );
+TimeLine.prototype.to = function(duration, sprite, end, config) {
+    var newTween = TweenFactory.moveStright(duration, sprite, end, config);
 
     this.add(newTween);
 
@@ -372,11 +376,11 @@ function Observer() {
     this.when = {};
 }
 
-Observer.prototype.timeUp = function(time, duration) {
+Observer.prototype.timeUp = function(time) {
     var key = time;
 
-    typeof this.when[key] === 'function' && this.when[key]();
-}
+    typeof this.when[key] === "function" && this.when[key]();
+};
 
 Observer.prototype.when = function(time, callback) {
     if (time === "start") {
@@ -386,4 +390,4 @@ Observer.prototype.when = function(time, callback) {
     }
 
     this.when[time] = callback;
-}
+};
