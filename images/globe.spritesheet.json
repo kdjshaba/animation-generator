@@ -1,0 +1,170 @@
+{
+    "frames": {
+        "globe_1": {
+            "frame": {
+                "x": 0,
+                "y": 1,
+                "w": 64,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        },
+        "globe_2": {
+            "frame": {
+                "x": 0,
+                "y": 65,
+                "w": 64,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        },
+        "globe_3": {
+            "frame": {
+                "x": 0,
+                "y": 129,
+                "w": 64,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        },
+        "globe_4": {
+            "frame": {
+                "x": 0,
+                "y": 193,
+                "w": 64,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        },
+        "globe_5": {
+            "frame": {
+                "x": 0,
+                "y": 257,
+                "w": 64,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        },
+        "globe_6": {
+            "frame": {
+                "x": 0,
+                "y": 321,
+                "w": 64,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        },
+        "globe_7": {
+            "frame": {
+                "x": 0,
+                "y": 385,
+                "w": 64,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        },
+        "globe_8": {
+            "frame": {
+                "x": 0,
+                "y": 449,
+                "w": 64,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        },
+        "globe_9": {
+            "frame": {
+                "x": 0,
+                "y": 513,
+                "w": 64,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        },
+        "globe_10": {
+            "frame": {
+                "x": 0,
+                "y": 577,
+                "w": 64,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        },
+        "globe_11": {
+            "frame": {
+                "x": 0,
+                "y": 641,
+                "w": 64,
+                "h": 64
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        },
+        "globe_12": {
+            "frame": {
+                "x": 0,
+                "y": 705,
+                "w": 64,
+                "h": 63
+            },
+            "sourceSize": {
+                "w": 64,
+                "h": 64
+            },
+            "duration": 100
+        }
+    },
+    "meta": {
+        "image": "globe.svg",
+        "x": 0,
+        "y": 0,
+        "scale": 10,
+        "size": {
+            "w": 64,
+            "h": 768
+        }
+    }
+}

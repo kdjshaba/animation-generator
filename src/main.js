@@ -10,54 +10,63 @@ const {
   Text,
   TextStyle,
   Graphics,
+  AnimatedSprite
 } = PIXI;
 const loader = Loader.shared;
 
 const imgInit = [{
-    name: "map",
-    fileName: "map5.jpg",
+    name: 'map',
+    fileName: 'map5.jpg',
     x: 0,
     y: 0,
   },
   {
-    name: "runway",
-    fileName: "road.png",
+    name: 'runway',
+    fileName: 'road.png',
     x: 175,
     y: 1825,
   },
   {
-    name: "plane",
-    fileName: "plane03.png",
+    name: 'plane',
+    fileName: 'plane03.png',
     x: 175,
     y: 1825,
   },
   {
-    name: "gallery",
-    fileName: "gallery.png",
+    name: 'gallery',
+    fileName: 'gallery.png',
     x: 500,
     y: 1500,
   },
   {
-    name: "factoryCar",
-    fileName: "factory-car.png",
+    name: 'factoryCar',
+    fileName: 'factory-car.png',
   },
   {
-    name: "garbage-truck",
-    fileName: "garbage-truck.png",
+    name: 'garbage-truck',
+    fileName: 'garbage-truck.png',
     x: 850,
     y: 1300,
   },
   {
-    name: "anchor",
-    fileName: "anchor.png",
+    name: 'anchor',
+    fileName: 'anchor.png',
+  },
+  {
+    name: 'globe',
+    fileName: 'globe.svg',
+  },
+  {
+    name: 'globe-spritesheet',
+    fileName: 'globe.spritesheet.json',
   },
 ];
 
 // if browser don't suppert WebGL then use canvas
-let type = "WebGL";
+let type = 'WebGL';
 
 if (!utils.isWebGLSupported()) {
-  type = "canvas";
+  type = 'canvas';
 }
 
 utils.sayHello(type);
@@ -66,7 +75,7 @@ utils.sayHello(type);
 var appTicker = new Ticker();
 var appTL = new TimeLine();
 var mainTL = new TimeLine({
-  order: "parallel",
+  order: 'parallel',
 });
 var viewContainer = document.querySelector('#viewContainer');
 
@@ -76,11 +85,11 @@ let app = new Application({
   width: viewContainer.scrollWidth,
   height: viewContainer.scrollHeight,
   transparent: true,
-  autoDensity: true
+  autoDensity: true,
 });
 
-app.renderer.view.style.position = "absolute";
-app.renderer.view.style.display = "block";
+app.renderer.view.style.position = 'absolute';
+app.renderer.view.style.display = 'block';
 
 var updateBounds = backgroundDrag({
     top: 0,
@@ -91,9 +100,8 @@ var updateBounds = backgroundDrag({
   app.stage
 );
 
-window.addEventListener("resize", e => {
+window.addEventListener('resize', (e) => {
   app.renderer.resize(viewContainer.scrollWidth, viewContainer.scrollHeight);
-  app.renderer.render(app.stage);
 
   centerStage();
   updateBounds({
@@ -104,7 +112,7 @@ window.addEventListener("resize", e => {
   });
 });
 
-loader.onProgress.add(() => console.log("img loaded"));
+loader.onProgress.add(() => console.log('img loaded'));
 loadImages(imgInit);
 loader.load(setup);
 
@@ -113,13 +121,13 @@ function setup() {
 
   centerPivot(app.stage);
   centerStage();
-  app.stage.scale.set(0.2)
+  app.stage.scale.set(0.6);
 
   appTL
-    .to(0.4, app.stage, {
+    .to(0.65, app.stage, {
       scale: {
-        x: 0.3,
-        y: 0.3,
+        x: 1,
+        y: 1
       },
     })
     .add(mainTL);
@@ -132,17 +140,18 @@ function setup() {
 }
 
 function main() {
-  setMap();
-  plane();
+  // setMap();
+  // plane();
+  globe();
 }
 
 function setMap() {
-  var map = createSpriteFromName("map");
+  var map = createSpriteFromName('map');
   app.stage.addChild(map);
 }
 
 function plane() {
-  var plane = createSpriteFromName("plane");
+  var plane = createSpriteFromName('plane');
 
   plane.x = imgInit[2].x + 700;
   plane.y = imgInit[2].y + 700;
@@ -157,9 +166,14 @@ function plane() {
         angle: 40,
       },
     }, {
-      timingFunction: "easeInOut",
+      timingFunction: 'easeInOut',
     }
   );
+}
+
+function globe() {
+  var globe = createAnimationSprite('globe-spritesheet');
+  app.stage.addChild(globe);
 }
 
 // feature
@@ -252,28 +266,26 @@ function backgroundDrag(bounds, draggable) {
 function resizeStage(scale) {
   const ticker = new Ticker();
   const tl = new TimeLine();
-  tl
-    .to(0.5, app.stage, {
-      scale: {
-        x: scale,
-        y: scale
-      }
-    })
-    .when('end', function() {
-      ticker.stop();
-    })
+  tl.to(0.5, app.stage, {
+    scale: {
+      x: scale,
+      y: scale,
+    },
+  }).when('end', function() {
+    ticker.stop();
+  });
 
   ticker
     .add(() => {
-      tl.play()
+      tl.play();
     })
-    .start()
+    .start();
 }
 
 // utils
 function loadImages(data) {
   data.forEach((img) => {
-    const path = img.url || "images/" + img.fileName;
+    const path = img.url || 'images/' + img.fileName;
 
     loader.add(img.name, path, {
       crossOrigin: true,
@@ -285,6 +297,38 @@ function createSpriteFromName(sourceName, spriteName) {
   let sprite = new Sprite(loader.resources[sourceName].texture);
   sprite.name = sourceName || spriteName;
   return sprite;
+}
+
+function createAnimationSprite(sheetName) {
+  var sheet = loader.resources[sheetName];
+  var frames = Object.keys(sheet.data.frames);
+  var meta = sheet.data.meta;
+
+  var textures = [];
+  var scale = meta.scale || 1;
+  var x = meta.x || 0;
+  var y = meta.y || 0;
+
+  for (let i = 0; i < frames.length; i++) {
+    var framekey = frames[i];
+    var texture = Texture.from(framekey);
+    var frame = sheet.data.frames[framekey];
+    var time = frame.duration;
+
+    textures.push({
+      texture: texture,
+      time: time
+    });
+  }
+
+  var animSprite = new AnimatedSprite(textures);
+  animSprite.name = sheetName;
+  animSprite.scale.set(scale);
+  animSprite.x = x;
+  animSprite.y = y;
+  animSprite.play();
+
+  return animSprite;
 }
 
 function centerStage() {
