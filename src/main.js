@@ -266,7 +266,7 @@ function backgroundDrag(bounds, draggable) {
 function resizeStage(scale) {
   const ticker = new Ticker();
   const tl = new TimeLine();
-  tl.to(0.5, app.stage, {
+  tl.to(0.4, app.stage, {
     scale: {
       x: scale,
       y: scale,
