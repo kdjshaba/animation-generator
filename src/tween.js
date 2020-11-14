@@ -383,12 +383,11 @@ TimeLine.prototype.play = function(time) {
 
   if (this.time === null) return;
 
-  this.observer.timeUp(this.time, this.duration);
-
   this.runChilds(this.time, this.children);
-
+  
+  this.observer.timeUp(this.time, this.duration);
   if (this.time === this.duration) {
-    this.observer.timeUp("end", this.duration);
+    this.observer.end();
   }
 };
 
@@ -414,21 +413,18 @@ TimeLine.prototype.when = function(time, callback) {
 };
 
 function Observer() {
-  this.when = {};
+  this.observers = {};
 }
 
 Observer.prototype.timeUp = function(time) {
-  var key = time;
+  typeof this.observers[time] === "function" && this.observers[time]();
+};
 
-  typeof this.when[key] === "function" && this.when[key]();
+Observer.prototype.end = function() {
+  typeof this.observers['end'] === "function" && this.observers['end']();
 };
 
 Observer.prototype.when = function(time, callback) {
-  if (time === "start") {
-    time = 0;
-  } else {
-    time = time * 60;
-  }
-
-  this.when[time] = callback;
+  time = isNaN(+time) ? time : time * 60;
+  this.observers[time] = callback;
 };

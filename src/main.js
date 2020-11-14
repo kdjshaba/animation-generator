@@ -71,12 +71,6 @@ if (!utils.isWebGLSupported()) {
 
 utils.sayHello(type);
 
-// timeLine
-var appTicker = new Ticker();
-var appTL = new TimeLine();
-var mainTL = new TimeLine({
-  order: 'parallel',
-});
 var viewContainer = document.querySelector('#viewContainer');
 
 // create application root
@@ -116,21 +110,24 @@ loader.onProgress.add(() => console.log('img loaded'));
 loadImages(imgInit);
 loader.load(setup);
 
+// timeLine
+var appTicker = new Ticker();
+var appTL = new TimeLine();
+var openingTL = new TimeLine({
+  order: 'parallel',
+});
+var mainTL = new TimeLine({
+  order: 'parallel',
+});
+
 function setup() {
-  main();
-
-  centerPivot(app.stage);
-  centerStage();
-  app.stage.scale.set(0.6);
-
+  openingTL.when('end', main);
+  
   appTL
-    .to(0.65, app.stage, {
-      scale: {
-        x: 1,
-        y: 1
-      },
-    })
+    .add(openingTL)
     .add(mainTL);
+  
+  opening();
 
   appTicker
     .add(() => {
@@ -139,9 +136,23 @@ function setup() {
     .start();
 }
 
+function opening() {
+  setMap();
+
+  centerPivot(app.stage);
+  centerStage();
+  app.stage.scale.set(0.6);
+
+  openingTL.to(0.65, app.stage, {
+    scale: {
+      x: 0.5,
+      y: 0.5
+    },
+  })
+}
+
 function main() {
-  // setMap();
-  // plane();
+  plane();
   globe();
 }
 
@@ -157,18 +168,26 @@ function plane() {
   plane.y = imgInit[2].y + 700;
   app.stage.addChild(plane);
 
-  mainTL.to(
-    1,
-    plane, {
-      x: imgInit[2].x + 300,
-      y: imgInit[2].y - 100,
-      rotate: {
-        angle: 40,
-      },
-    }, {
-      timingFunction: 'easeInOut',
-    }
-  );
+  mainTL
+    .to(
+      1,
+      plane, {
+        x: imgInit[2].x + 300,
+        y: imgInit[2].y - 100
+      }, {
+        timingFunction: 'easeInOut',
+      }
+    )
+    .to(
+      1,
+      plane, {
+        rotate: {
+          angle: 40,
+        },
+      }, {
+        timingFunction: 'easeIn',
+      }
+    )
 }
 
 function globe() {
@@ -282,6 +301,11 @@ function resizeStage(scale) {
     .start();
 }
 
+function centerStage() {
+  app.stage.x = app.renderer.view.width / 2;
+  app.stage.y = app.renderer.view.height / 2;
+}
+
 // utils
 function loadImages(data) {
   data.forEach((img) => {
@@ -329,11 +353,6 @@ function createAnimationSprite(sheetName) {
   animSprite.play();
 
   return animSprite;
-}
-
-function centerStage() {
-  app.stage.x = app.renderer.view.width / 2;
-  app.stage.y = app.renderer.view.height / 2;
 }
 
 function centerPivot(container) {
