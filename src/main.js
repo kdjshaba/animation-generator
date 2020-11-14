@@ -14,7 +14,8 @@ const {
 } = PIXI;
 const loader = Loader.shared;
 
-const imgInit = [{
+const imgInit = [
+  {
     name: 'map',
     fileName: 'map5.jpg',
     x: 0,
@@ -30,7 +31,7 @@ const imgInit = [{
     name: 'plane',
     fileName: 'plane03.png',
     x: 175,
-    y: 1825,
+    y: 1225,
   },
   {
     name: 'gallery',
@@ -117,7 +118,7 @@ var openingTL = new TimeLine({
   order: 'parallel',
 });
 var mainTL = new TimeLine({
-  order: 'parallel',
+  order: 'parallel'
 });
 
 function setup() {
@@ -141,7 +142,7 @@ function opening() {
 
   centerPivot(app.stage);
   centerStage();
-  app.stage.scale.set(0.6);
+  app.stage.scale.set(0.35);
 
   openingTL.to(0.65, app.stage, {
     scale: {
@@ -168,24 +169,20 @@ function plane() {
   plane.y = imgInit[2].y + 700;
   app.stage.addChild(plane);
 
-  mainTL
+  mainTL.create({ order: 'parallel' })
     .to(
       1,
       plane, {
-        x: imgInit[2].x + 300,
+        x: imgInit[2].x + 500,
         y: imgInit[2].y - 100
-      }, {
-        timingFunction: 'easeInOut',
       }
     )
     .to(
       1,
       plane, {
         rotate: {
-          angle: 40,
-        },
-      }, {
-        timingFunction: 'easeIn',
+          angle: 90
+        }
       }
     )
 }

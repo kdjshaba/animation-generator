@@ -31,12 +31,16 @@ var SubjectAdapter = {
 
         if (prop === "x" || prop === "y") {
           sprite[prop] = propVal;
-        } else if (prop === "rotate") {
-          sprite.pivot.set(propVal.center.x, propVal.center.y);
+        } else if (prop === "rotate"　&& isNumber(propVal.angle)) {
+          // sprite.pivot.set(propVal.center.x, propVal.center.y);
           sprite.angle = propVal.angle;
         } else if (prop === "scale") {
-          sprite.scale.x = propVal.x;
-          sprite.scale.y = propVal.y;
+          if (isNumber(propVal.x)) {
+            sprite.scale.x = propVal.x;
+          }
+          if (isNumber(propVal.y)) {
+            sprite.scale.y = propVal.y;
+          }
         }
       }
     },
@@ -59,44 +63,7 @@ var SubjectAdapter = {
 
       return obj;
     }
-  },
-  applyToSprite: function(sprite, change) {
-    var keys = Object.keys(change);
-
-    for (var i = 0; i < keys.length; i++) {
-      var prop = keys[i];
-      var propVal = change[prop];
-
-      if (prop === "x" || prop === "y") {
-        sprite[prop] = propVal;
-      } else if (prop === "rotate") {
-        sprite.pivot.set(propVal.center.x, propVal.center.y);
-        sprite.angle = propVal.angle;
-      } else if (prop === "scale") {
-        sprite.scale.x = propVal.x;
-        sprite.scale.y = propVal.y;
-      }
-    }
-  },
-  fromSprite: function(sprite) {
-    var obj = {
-      x: sprite.x,
-      y: sprite.y,
-      rotate: {
-        angle: sprite.angle,
-        center: {
-          x: sprite.pivot.x,
-          y: sprite.pivot.y,
-        },
-      },
-      scale: {
-        x: sprite.scale.x,
-        y: sprite.scale.y,
-      },
-    };
-
-    return obj;
-  },
+  }
 };
 
 // timingFunctions
@@ -177,7 +144,7 @@ var Transforms = {
 
     rotate.angle = startAngle + diff;
 
-    return rotate;
+    return { rotate };
   },
   scale: function(start, end, percentage) {
     var scale = {};
@@ -189,14 +156,14 @@ var Transforms = {
     var endX = end.scale.x;
     var endY = end.scale.y;
 
-    if (typeof endX === "number") {
+    if (isNumber(endX)) {
       scale.x = startX + (endX - startX) * percentage;
     }
-    if (typeof endY === "number") {
+    if (isNumber(endY)) {
       scale.y = startY + (endY - startY) * percentage;
     }
 
-    return scale;
+    return { scale };
   },
 };
 
@@ -288,32 +255,14 @@ Tween.prototype.transformFunc = Transforms;
 
 Tween.prototype.transform = function(start, end, percentage) {
   var transformKeys = Object.keys(this.transformFunc);
-  var result = objectAssign({}, start);
+  var result = {};
 
   for (let i = 0; i < transformKeys.length; i++) {
     var key = transformKeys[i];
     var transform = this.transformFunc[key];
     var partialResult = transform(start, end, percentage);
-
-    switch (key) {
-      case "rotate":
-        result.rotate = objectAssign(
-          objectAssign({}, start.rotate),
-          partialResult
-        );
-        break;
-
-      case "scale":
-        result.scale = objectAssign(
-          objectAssign({}, start.scale),
-          partialResult
-        );
-        break;
-
-      default:
-        objectAssign(result, partialResult);
-        break;
-    }
+    
+    objectAssign(result, partialResult);
   }
 
   return result;
@@ -390,6 +339,14 @@ TimeLine.prototype.play = function(time) {
     this.observer.end();
   }
 };
+
+// create child timeline
+TimeLine.prototype.create = function (config) {
+  const newTl = new TimeLine(config);
+  
+  this.add(newTl);
+  return newTl;
+}
 
 // create tween on timeline
 TimeLine.prototype.to = function(duration, sprite, end, config) {

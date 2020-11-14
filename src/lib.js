@@ -8,3 +8,7 @@ function objectAssign(newObj, target) {
 
     return newObj;
 }
+
+function isNumber(value) {
+    return typeof value === 'number' || (!isNaN(value) && value !== null && value !== false);
+}
